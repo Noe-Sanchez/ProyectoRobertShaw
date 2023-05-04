@@ -20,6 +20,10 @@ void USER_ADC_Init(void);
 void USER_ADC_Calibration(void);
 uint16_t USER_ADC_Read( void );
 
+
+void USER_TIM2_Capture_Init(void);
+uint16_t USER_TIM2_Capture_Event(void);
+
 int main(void){
   HAL_Init();
   SystemClock_Config();
@@ -33,9 +37,11 @@ int main(void){
   USER_ADC_Init();
   USER_ADC_Calibration();
 
-  uint16_t // event_val1, event_val2, event_diff,
-  dataADC;
-  //float pressed_t;-
+  USER_TIM2_Capture_Init();
+
+
+  uint16_t event_val1, event_val2, event_diff,
+  pressed_t, dataADC;
 
 
   LCD_Init();
@@ -65,6 +71,22 @@ int main(void){
 	int intpart = floor(converted);
 	int floatpart = (converted - intpart) * 100;
 
+	//sprintf(str, "%d", 0);
+	//printf(str);
+	event_val1 = USER_TIM2_Capture_Event();//	capture the 1st event
+	//TIM2->CCER ^=	TIM_CCER_CC1P;//		capture is done on different edge
+	event_val2 = USER_TIM2_Capture_Event();//	capture the 2nd event
+	event_diff = event_val2 - event_val1;//		2nd event - 1st event
+	//Calculating time according to the timer ticks difference5
+	pressed_t = 1/(( 1.0 / 64000000.0 ) * event_diff * (TIM2->PSC + 1));
+
+	//sprintf(str, "%d", 1);
+	//printf(str);
+	//TIM2->CCER ^=	TIM_CCER_CC1P;//		capture is done on different edge
+	int intpart2 = floor(pressed_t);
+	int floatpart2 = (pressed_t - intpart2) * 100;
+
+
 	//char str2[30];
 	char received = 'x';
 	received = USER_USART2_Read();
@@ -73,7 +95,10 @@ int main(void){
 		if(received == 'A'){
 			int plot = 0;
 
-			sprintf(str, "%d", intpart*2);
+			sprintf(str, "%d", intpart2);
+			printf(str);
+			printf(".");
+			sprintf(str, "%d", floatpart2);
 			printf(str);
 
 			sprintf(str, "%c", ' ');
@@ -92,21 +117,23 @@ int main(void){
 			printf(str);
 
 			printf("\r\n");
-			HAL_Delay(100);
-
-			LCD_Set_Cursor(2,0);
-			LCD_Put_Str("       ");
-			LCD_Set_Cursor(2,0);
-			LCD_Put_Num(intpart);
-			LCD_Put_Str(".");
-			LCD_Put_Num(floatpart);
-			LCD_Put_Str(" V");
 		//printf("Received: ");
 		//sprintf(str2, "%c", received);
 		//printf(str2);
 		//printf("\r\n");
 		}
+
 	}
+
+	//HAL_Delay(100);
+
+	LCD_Set_Cursor(2,0);
+	LCD_Put_Str("       ");
+	LCD_Set_Cursor(2,0);
+	LCD_Put_Num(intpart);
+	LCD_Put_Str(".");
+	LCD_Put_Num(floatpart);
+	LCD_Put_Str(" V");
 
   }
 
@@ -166,11 +193,16 @@ void USER_RCC_Init(void){
 	RCC->CFGR	|=	 RCC_CFGR_ADCPRE;
 	//Timer 2 clock enable
 	RCC->APB1ENR	|=	 RCC_APB1ENR_TIM2EN;
+	RCC->APB1ENR	|=	 RCC_APB1ENR_TIM2EN;
 	RCC->APB1ENR	|=	 RCC_APB1ENR_USART2EN;//  	USART2 clock enable
 }
 void USER_GPIO_Init(void){
-	//PA0 (TIM2_CH1) as input floating
+	//Input ADC
 	GPIOA->CRL	&=	~GPIO_CRL_CNF0 & ~GPIO_CRL_MODE0;
+	//Input frec
+	GPIOA->CRL	&=	~GPIO_CRL_CNF1_1 & ~GPIO_CRL_MODE1;
+	GPIOA->CRL	|=	 GPIO_CRL_CNF1_0;
+
 
 	GPIOA->CRL	&=	~GPIO_CRL_CNF2_0 & ~GPIO_CRL_MODE2_1;
 	GPIOA->CRL	|=	 GPIO_CRL_CNF2_1 | GPIO_CRL_MODE2_0;
@@ -235,6 +267,23 @@ void USER_USART2_Init(void){
 	USART2->BRR	 =	 0x116;//			115200 bps -> 17.36,
 	USART2->CR1	|=	 USART_CR1_TE;//	        transmitter enabled
 	USART2->CR1	|=	 USART_CR1_RE;// receiver enabled
+}
+
+void USER_TIM2_Capture_Init(void){
+	TIM2->CR1	&=	~TIM_CR1_CKD_0;
+	TIM2->CR1	|=	 TIM_CR1_CKD_1;//	sampling (DTS) = TIM_CLK/4
+	TIM2->CCMR1 	&=	~TIM_CCMR1_CC1S_0;
+	TIM2->CCMR1 	|=	 TIM_CCMR1_CC1S_1;//	CC1 channel as input, mapped on TI1
+	TIM2->CCMR1 	|=	 TIM_CCMR1_IC1F;//	filter -> DTS/32, N=8
+	TIM2->CCER	|=	 TIM_CCER_CC1P;//	capture is done on falling edge
+	TIM2->CCMR1 	&=	~TIM_CCMR1_IC1PSC;//	no prescaler
+	TIM2->CCER	|=	 TIM_CCER_CC1E;//	capture enabled
+	TIM2->PSC	 =	 977;//		maximum prescaler
+	TIM2->CR1	|=	 TIM_CR1_CEN;//		counter enabled
+}
+uint16_t USER_TIM2_Capture_Event(void){
+	while( !(TIM2->SR & TIM_SR_CC1IF) );//		wait until a capture occurrs
+	return TIM2->CCR1;//				return the captured value
 }
 
 void Error_Handler(void)
