@@ -70,7 +70,7 @@ int main(void){
 	if(received != 'x'){
 		lastReceived = received;
 		int intpart, intpart2, floatpart, floatpart2 = 0;
-		if(received == 'A' || received == 'F'){
+		if(received == 'A' || received == 'P'){
 			//----------------------PWM
 			dataADC = USER_ADC_Read();
 			float converted = 3.3*(dataADC/((pow(2,12)-1)));
@@ -104,10 +104,10 @@ int main(void){
 			LCD_Put_Num(intpart);
 			LCD_Put_Str(".");
 			LCD_Put_Num(floatpart);
-			LCD_Put_Str(" Hz");
+			LCD_Put_Str(" V");
 
 	   }
-	   if(received == 'A' || received == 'P'){
+	   if(received == 'A' || received == 'F'){
 		    //--------------------ADC
 		   	event_val1 = USER_TIM2_Capture_Event();//	capture the 1st event
 		   	event_val2 = USER_TIM2_Capture_Event();//	capture the 2nd event
@@ -143,7 +143,7 @@ int main(void){
 			LCD_Put_Num(intpart2);
 			LCD_Put_Str(".");
 			LCD_Put_Num(floatpart2);
-			LCD_Put_Str(" V");
+			LCD_Put_Str(" Hz");
 	 }
 	}
   }
