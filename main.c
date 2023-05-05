@@ -45,18 +45,18 @@ int main(void){
 
 
   LCD_Init();
-   LCD_Cursor_ON();
-    LCD_Clear();
-    LCD_Set_Cursor(1,0);
-    LCD_Put_Str("DEMO ADC");
-    LCD_Set_Cursor(2,0);
-    LCD_Put_Str("TE2003B");
+  LCD_Cursor_ON();
+  LCD_Clear();
+  LCD_Set_Cursor(1,0);
+  LCD_Put_Str("DEMO ADC");
+  LCD_Set_Cursor(2,0);
+  LCD_Put_Str("TE2003B");
 
-    HAL_Delay(2000);
-    LCD_Clear();
+  HAL_Delay(2000);
+  LCD_Clear();
 
-    LCD_Set_Cursor(1,0);
-    LCD_Put_Str("Lectura ADC:");
+  //LCD_Set_Cursor(1,0);
+  //LCD_Put_Str("Lectura ADC:");
 
 
   uint8_t msg[] = "\r\n";
@@ -64,41 +64,26 @@ int main(void){
   ADC1->CR2	|=	 ADC_CR2_ADON;
   char lastReceived;
   while (1){
-	dataADC = USER_ADC_Read();
-	//printf("Voltage: ");
 	char str[30];
-	float converted = 3.3*(dataADC/((pow(2,12)-1)));
-	int intpart = floor(converted);
-	int floatpart = (converted - intpart) * 100;
-
-	//sprintf(str, "%d", 0);
-	//printf(str);
-	event_val1 = USER_TIM2_Capture_Event();//	capture the 1st event
-	//TIM2->CCER ^=	TIM_CCER_CC1P;//		capture is done on different edge
-	event_val2 = USER_TIM2_Capture_Event();//	capture the 2nd event
-	event_diff = event_val2 - event_val1;//		2nd event - 1st event
-	//Calculating time according to the timer ticks difference5
-	pressed_t = 1/(( 1.0 / 64000000.0 ) * event_diff * (TIM2->PSC + 1));
-
-	//sprintf(str, "%d", 1);
-	//printf(str);
-	//TIM2->CCER ^=	TIM_CCER_CC1P;//		capture is done on different edge
-	int intpart2 = floor(pressed_t);
-	int floatpart2 = (pressed_t - intpart2) * 100;
-
-
-	//char str2[30];
 	char received = 'x';
 	received = USER_USART2_Read();
 	if(received != 'x'){
 		lastReceived = received;
-		if(received == 'A'){
+		int intpart, intpart2, floatpart, floatpart2 = 0;
+		if(received == 'A' || received == 'F'){
+			//----------------------PWM
+			dataADC = USER_ADC_Read();
+			float converted = 3.3*(dataADC/((pow(2,12)-1)));
+			intpart = floor(converted);
+			floatpart = (converted - intpart) * 100;
+			//-------------------------
+
 			int plot = 0;
 
 			sprintf(str, "%d", intpart2);
 			printf(str);
 			printf(".");
-			sprintf(str, "%d", floatpart2);
+			sprintf(str, "%d", 0);
 			printf(str);
 
 			sprintf(str, "%c", ' ');
@@ -110,31 +95,57 @@ int main(void){
 			sprintf(str, "%d", floatpart);
 			printf(str);
 
+			printf("\r\n");
+
+			//HAL_Delay(100);
+			LCD_Set_Cursor(1,0);
+			LCD_Put_Str("       ");
+			LCD_Set_Cursor(1,0);
+			LCD_Put_Num(intpart);
+			LCD_Put_Str(".");
+			LCD_Put_Num(floatpart);
+			LCD_Put_Str(" Hz");
+
+	   }
+	   if(received == 'A' || received == 'P'){
+		    //--------------------ADC
+		   	event_val1 = USER_TIM2_Capture_Event();//	capture the 1st event
+		   	event_val2 = USER_TIM2_Capture_Event();//	capture the 2nd event
+		   	event_diff = event_val2 - event_val1;//		2nd event - 1st event
+		   	//Calculating time according to the timer ticks difference5
+		   	pressed_t = 1/(( 1.0 / 64000000.0 ) * event_diff * (TIM2->PSC + 1));
+		   	intpart2 = floor(pressed_t);
+		   	floatpart2 = (pressed_t - intpart2) * 100;
+		   	//-----------------------
+
+			int plot = 0;
+
+			sprintf(str, "%d", intpart2);
+			printf(str);
+			printf(".");
+			sprintf(str, "%d", floatpart2);
+			printf(str);
+
 			sprintf(str, "%c", ' ');
 			printf(str);
 
-			sprintf(str, "%d", plot);
+			sprintf(str, "%d", 0);
+			printf(str);
+			printf(".");
+			sprintf(str, "%d", 0);
 			printf(str);
 
 			printf("\r\n");
-		//printf("Received: ");
-		//sprintf(str2, "%c", received);
-		//printf(str2);
-		//printf("\r\n");
-		}
 
+			LCD_Set_Cursor(2,0);
+			LCD_Put_Str("       ");
+			LCD_Set_Cursor(2,0);
+			LCD_Put_Num(intpart2);
+			LCD_Put_Str(".");
+			LCD_Put_Num(floatpart2);
+			LCD_Put_Str(" V");
+	 }
 	}
-
-	//HAL_Delay(100);
-
-	LCD_Set_Cursor(2,0);
-	LCD_Put_Str("       ");
-	LCD_Set_Cursor(2,0);
-	LCD_Put_Num(intpart);
-	LCD_Put_Str(".");
-	LCD_Put_Num(floatpart);
-	LCD_Put_Str(" V");
-
   }
 
 }
