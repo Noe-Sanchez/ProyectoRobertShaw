@@ -69,7 +69,7 @@ int main(void){
 	received = USER_USART2_Read();
 	if(received != 'x'){
 		lastReceived = received;
-		int intpart, intpart2, floatpart, floatpart2 = 0;
+		int intpart, intpart2, floatpart, floatpart2 = 999;
 		if(received == 'A' || received == 'P'){
 			//----------------------PWM
 			dataADC = USER_ADC_Read();
@@ -78,33 +78,7 @@ int main(void){
 			floatpart = (converted - intpart) * 100;
 			//-------------------------
 
-			int plot = 0;
 
-			sprintf(str, "%d", intpart2);
-			printf(str);
-			printf(".");
-			sprintf(str, "%d", 0);
-			printf(str);
-
-			sprintf(str, "%c", ' ');
-			printf(str);
-
-			sprintf(str, "%d", intpart);
-			printf(str);
-			printf(".");
-			sprintf(str, "%d", floatpart);
-			printf(str);
-
-			printf("\r\n");
-
-			//HAL_Delay(100);
-			LCD_Set_Cursor(1,0);
-			LCD_Put_Str("       ");
-			LCD_Set_Cursor(1,0);
-			LCD_Put_Num(intpart);
-			LCD_Put_Str(".");
-			LCD_Put_Num(floatpart);
-			LCD_Put_Str(" V");
 
 	   }
 	   if(received == 'A' || received == 'F'){
@@ -118,33 +92,42 @@ int main(void){
 		   	floatpart2 = (pressed_t - intpart2) * 100;
 		   	//-----------------------
 
-			int plot = 0;
 
-			sprintf(str, "%d", intpart2);
-			printf(str);
-			printf(".");
-			sprintf(str, "%d", floatpart2);
-			printf(str);
-
-			sprintf(str, "%c", ' ');
-			printf(str);
-
-			sprintf(str, "%d", 0);
-			printf(str);
-			printf(".");
-			sprintf(str, "%d", 0);
-			printf(str);
-
-			printf("\r\n");
-
-			LCD_Set_Cursor(2,0);
-			LCD_Put_Str("       ");
-			LCD_Set_Cursor(2,0);
-			LCD_Put_Num(intpart2);
-			LCD_Put_Str(".");
-			LCD_Put_Num(floatpart2);
-			LCD_Put_Str(" Hz");
 	 }
+
+	 sprintf(str, "%d", intpart2);
+	 printf(str);
+	 printf(".");
+	 sprintf(str, "%d", floatpart2);
+	 printf(str);
+
+	 sprintf(str, "%c", ' ');
+	 printf(str);
+
+	 sprintf(str, "%d", intpart);
+	 printf(str);
+	 printf(".");
+	 sprintf(str, "%d", floatpart);
+	 printf(str);
+
+	 printf("\r\n");
+
+	 //HAL_Delay(100);
+	 LCD_Set_Cursor(1,0);
+	 LCD_Put_Str("       ");
+	 LCD_Set_Cursor(1,0);
+	 LCD_Put_Num(intpart);
+	 LCD_Put_Str(".");
+	 LCD_Put_Num(floatpart);
+	 LCD_Put_Str(" V");
+
+	 LCD_Set_Cursor(2,0);
+	 LCD_Put_Str("       ");
+	 LCD_Set_Cursor(2,0);
+	 LCD_Put_Num(intpart2);
+	 LCD_Put_Str(".");
+	 LCD_Put_Num(floatpart2);
+	 LCD_Put_Str(" Hz");
 	}
   }
 
