@@ -48,7 +48,7 @@ int main(void){
   LCD_Cursor_ON();
   LCD_Clear();
   LCD_Set_Cursor(1,0);
-  LCD_Put_Str("DEMO ADC");
+  LCD_Put_Str("ROBERTSHAW");
   LCD_Set_Cursor(2,0);
   LCD_Put_Str("TE2003B");
 
@@ -64,12 +64,15 @@ int main(void){
   ADC1->CR2	|=	 ADC_CR2_ADON;
   char lastReceived;
   while (1){
-	char str[30];
 	char received = 'x';
 	received = USER_USART2_Read();
 	if(received != 'x'){
+		LCD_Clear();
 		lastReceived = received;
-		int intpart, intpart2, floatpart, floatpart2 = 999;
+		int intpart = -1;
+		int intpart2 = -1;
+		int floatpart = 0;
+		int floatpart2 = 0;
 		if(received == 'A' || received == 'P'){
 			//----------------------PWM
 			dataADC = USER_ADC_Read();
@@ -78,7 +81,13 @@ int main(void){
 			floatpart = (converted - intpart) * 100;
 			//-------------------------
 
+			float psi = (converted * 25) - 12;
 
+			LCD_Set_Cursor(2,0);
+			LCD_Put_Num(floor(psi));
+			LCD_Put_Str(".");
+			LCD_Put_Num((psi - floor(psi))*100);
+			LCD_Put_Str(" psi");
 
 	   }
 	   if(received == 'A' || received == 'F'){
@@ -92,8 +101,16 @@ int main(void){
 		   	floatpart2 = (pressed_t - intpart2) * 100;
 		   	//-----------------------
 
+		   	float lm = 0.12121 * pressed_t + 0.05349;
+
+		   	LCD_Set_Cursor(1,0);
+		   	LCD_Put_Num(floor(lm));
+		   	LCD_Put_Str(".");
+		   	LCD_Put_Num((lm - floor(lm))*100);
+		   	LCD_Put_Str(" l/m");
 
 	 }
+	 char str[30];
 
 	 sprintf(str, "%d", intpart2);
 	 printf(str);
@@ -104,6 +121,8 @@ int main(void){
 	 sprintf(str, "%c", ' ');
 	 printf(str);
 
+	 sprintf(str, "%c", ' ');
+
 	 sprintf(str, "%d", intpart);
 	 printf(str);
 	 printf(".");
@@ -111,23 +130,6 @@ int main(void){
 	 printf(str);
 
 	 printf("\r\n");
-
-	 //HAL_Delay(100);
-	 LCD_Set_Cursor(1,0);
-	 LCD_Put_Str("       ");
-	 LCD_Set_Cursor(1,0);
-	 LCD_Put_Num(intpart);
-	 LCD_Put_Str(".");
-	 LCD_Put_Num(floatpart);
-	 LCD_Put_Str(" V");
-
-	 LCD_Set_Cursor(2,0);
-	 LCD_Put_Str("       ");
-	 LCD_Set_Cursor(2,0);
-	 LCD_Put_Num(intpart2);
-	 LCD_Put_Str(".");
-	 LCD_Put_Num(floatpart2);
-	 LCD_Put_Str(" Hz");
 	}
   }
 
